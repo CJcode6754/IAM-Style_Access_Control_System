@@ -15,11 +15,8 @@ export default function Table({ columns = [], data = [], actions }) {
                 scope="col"
                 className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
               >
-                <div className="group inline-flex">
+                <div className="inline-flex group">
                   {column.label}
-                  <span className="ml-2 flex-none rounded text-gray-400">
-                    <ArrowUpDown className="h-4 w-4" aria-hidden="true" />
-                  </span>
                 </div>
               </th>
             ))}
@@ -28,14 +25,14 @@ export default function Table({ columns = [], data = [], actions }) {
             )}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-200 bg-white">
+        <tbody className="bg-white divide-y divide-gray-200">
           {safeData.length > 0 ? (
             safeData.map((item) => (
               <tr key={item.id || Math.random()}>
                 {columns.map((column) => (
                   <td
                     key={`${item.id || Math.random()}-${column.key}`}
-                    className="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                    className="px-3 py-4 text-sm text-gray-500 whitespace-nowrap"
                   >
                     {typeof column.render === 'function'
                       ? column.render(item[column.key], item)
@@ -43,7 +40,7 @@ export default function Table({ columns = [], data = [], actions }) {
                   </td>
                 ))}
                 {actions && (
-                  <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                  <td className="relative py-4 pl-3 pr-4 text-sm font-medium text-right whitespace-nowrap sm:pr-6">
                     {typeof actions === 'function' ? actions(item) : actions}
                   </td>
                 )}
@@ -53,7 +50,7 @@ export default function Table({ columns = [], data = [], actions }) {
             <tr>
               <td
                 colSpan={columns.length + (actions ? 1 : 0)}
-                className="px-3 py-4 text-sm text-gray-500 text-center"
+                className="px-3 py-4 text-sm text-center text-gray-500"
               >
                 No data available
               </td>

@@ -1,27 +1,27 @@
-import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Formik, Form, Field } from 'formik';
-import * as Yup from 'yup';
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Formik, Form, Field } from "formik";
+import * as Yup from "yup";
 import {
   fetchRoles,
   createRole,
   updateRole,
   deleteRole,
   assignPermissionsToRole,
-} from '../redux/slices/roleSlice';
-import { fetchPermissions } from '../redux/slices/permissionSlice';
-import Table from '../components/ui/Table';
-import Button from '../components/ui/Button';
-import Modal from '../components/ui/Modal';
-import Alert from '../components/ui/Alert';
+} from "../redux/slices/roleSlice";
+import { fetchPermissions } from "../redux/slices/permissionSlice";
+import Table from "../components/ui/Table";
+import Button from "../components/ui/Button";
+import Modal from "../components/ui/Modal";
+import Alert from "../components/ui/Alert";
 
 const roleSchema = Yup.object().shape({
-  name: Yup.string().required('Name is required'),
-  description: Yup.string().required('Description is required'),
+  name: Yup.string().required("Name is required"),
+  description: Yup.string().required("Description is required"),
 });
 
 const assignmentSchema = Yup.object().shape({
-  permissionIds: Yup.array().min(1, 'Select at least one permission'),
+  permissionIds: Yup.array().min(1, "Select at least one permission"),
 });
 
 export default function Roles() {
@@ -51,28 +51,30 @@ export default function Roles() {
   const handleSubmit = async (values, { resetForm, setSubmitting }) => {
     try {
       if (selectedRole) {
-        const result = await dispatch(updateRole({ 
-          id: selectedRole.id, 
-          roleData: values 
-        })).unwrap();
-        setAlertMessage({ 
-          type: 'success', 
-          message: `Role "${result.role.name}" updated successfully` 
+        const result = await dispatch(
+          updateRole({
+            id: selectedRole.id,
+            roleData: values,
+          })
+        ).unwrap();
+        setAlertMessage({
+          type: "success",
+          message: `Role "${result.role.name}" updated successfully`,
         });
       } else {
         const result = await dispatch(createRole(values)).unwrap();
-        setAlertMessage({ 
-          type: 'success', 
-          message: `Role "${result.role.name}" created successfully` 
+        setAlertMessage({
+          type: "success",
+          message: `Role "${result.role.name}" created successfully`,
         });
       }
       resetForm();
       setIsModalOpen(false);
       setSelectedRole(null);
     } catch (error) {
-      setAlertMessage({ 
-        type: 'error', 
-        message: error.message || 'An error occurred' 
+      setAlertMessage({
+        type: "error",
+        message: error.message || "An error occurred",
       });
     } finally {
       setSubmitting(false);
@@ -81,24 +83,26 @@ export default function Roles() {
 
   const handleAssignPermissions = async (values, { setSubmitting }) => {
     try {
-      const result = await dispatch(assignPermissionsToRole({
-        roleId: selectedRole.id,
-        permissionIds: values.permissionIds,
-      })).unwrap();
-      
+      const result = await dispatch(
+        assignPermissionsToRole({
+          roleId: selectedRole.id,
+          permissionIds: values.permissionIds,
+        })
+      ).unwrap();
+
       // Refresh the roles data to get updated permissions
       await dispatch(fetchRoles());
-      
-      setAlertMessage({ 
-        type: 'success', 
-        message: `Permissions assigned to "${selectedRole?.name}" successfully` 
+
+      setAlertMessage({
+        type: "success",
+        message: `Permissions assigned to "${selectedRole?.name}" successfully`,
       });
       setIsAssignModalOpen(false);
       setSelectedRole(null);
     } catch (error) {
-      setAlertMessage({ 
-        type: 'error', 
-        message: error.message || 'Failed to assign permissions' 
+      setAlertMessage({
+        type: "error",
+        message: error.message || "Failed to assign permissions",
       });
     } finally {
       setSubmitting(false);
@@ -106,23 +110,29 @@ export default function Roles() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this role?')) {
+    if (window.confirm("Are you sure you want to delete this role?")) {
       try {
         await dispatch(deleteRole(id)).unwrap();
-        setAlertMessage({ type: 'success', message: 'Role deleted successfully' });
+        setAlertMessage({
+          type: "success",
+          message: "Role deleted successfully",
+        });
       } catch (error) {
-        setAlertMessage({ type: 'error', message: error.message || 'An error occurred' });
+        setAlertMessage({
+          type: "error",
+          message: error.message || "An error occurred",
+        });
       }
     }
   };
 
   const columns = [
-    { key: 'name', label: 'Name' },
-    { key: 'description', label: 'Description' },
+    { key: "name", label: "Name" },
+    { key: "description", label: "Description" },
     {
-      key: 'permissions',
-      label: 'Permissions',
-      render: (_, role) => (Array.isArray(role.permissions) ? role.permissions.length : 0),
+      key: "permissions",
+      label: "Permissions",
+      render: (_, role) => role.permission_count || 0,
     },
   ];
 
@@ -148,11 +158,7 @@ export default function Roles() {
       >
         Assign Permissions
       </Button>
-      <Button
-        variant="danger"
-        size="sm"
-        onClick={() => handleDelete(role.id)}
-      >
+      <Button variant="danger" size="sm" onClick={() => handleDelete(role.id)}>
         Delete
       </Button>
     </div>
@@ -160,15 +166,15 @@ export default function Roles() {
 
   return (
     <div className="py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        <div className="flex justify-between items-center">
+      <div className="px-4 mx-auto max-w-7xl sm:px-6 md:px-8">
+        <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-gray-900">Roles</h1>
           <Button onClick={() => setIsModalOpen(true)}>Add Role</Button>
         </div>
 
         {/* Toast */}
         {alertMessage && (
-          <div className="fixed top-4 right-4 z-50 animate-fade-in">
+          <div className="fixed z-50 top-4 right-4 animate-fade-in">
             <Alert
               type={alertMessage.type}
               message={alertMessage.message}
@@ -180,19 +186,17 @@ export default function Roles() {
         <div className="mt-6">
           {isLoading ? (
             <div className="flex justify-center items-center min-h-[400px]">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+              <div className="w-8 h-8 border-b-2 border-indigo-600 rounded-full animate-spin"></div>
             </div>
           ) : roles && roles.length > 0 ? (
-            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-              <Table
-                columns={columns}
-                data={roles}
-                actions={renderActions}
-              />
+            <div className="overflow-hidden bg-white shadow sm:rounded-lg">
+              <Table columns={columns} data={roles} actions={renderActions} />
             </div>
           ) : (
-            <div className="text-center py-8 bg-white rounded-lg shadow">
-              <p className="text-gray-500">No roles found. Create your first role to get started.</p>
+            <div className="py-8 text-center bg-white rounded-lg shadow">
+              <p className="text-gray-500">
+                No roles found. Create your first role to get started.
+              </p>
             </div>
           )}
         </div>
@@ -204,12 +208,12 @@ export default function Roles() {
             setIsModalOpen(false);
             setSelectedRole(null);
           }}
-          title={selectedRole ? 'Edit Role' : 'Create New Role'}
+          title={selectedRole ? "Edit Role" : "Create New Role"}
         >
           <Formik
             initialValues={{
-              name: selectedRole?.name || '',
-              description: selectedRole?.description || '',
+              name: selectedRole?.name || "",
+              description: selectedRole?.description || "",
             }}
             validationSchema={roleSchema}
             onSubmit={handleSubmit}
@@ -218,7 +222,10 @@ export default function Roles() {
             {({ errors, touched, isSubmitting }) => (
               <Form className="space-y-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-gray-700"
+                  >
                     Name
                   </label>
                   <Field
@@ -233,7 +240,10 @@ export default function Roles() {
                 </div>
 
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor="description"
+                    className="block text-sm font-medium text-gray-700"
+                  >
                     Description
                   </label>
                   <Field
@@ -244,7 +254,9 @@ export default function Roles() {
                     className="mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                   />
                   {errors.description && touched.description && (
-                    <p className="mt-1 text-xs text-red-600">{errors.description}</p>
+                    <p className="mt-1 text-xs text-red-600">
+                      {errors.description}
+                    </p>
                   )}
                 </div>
 
@@ -252,15 +264,17 @@ export default function Roles() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:col-start-2"
+                    className="inline-flex justify-center w-full px-3 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:col-start-2"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        <div className="w-4 h-4 mr-2 border-b-2 border-white rounded-full animate-spin"></div>
                         <span>Saving...</span>
                       </div>
+                    ) : selectedRole ? (
+                      "Save Changes"
                     ) : (
-                      selectedRole ? 'Save Changes' : 'Create Role'
+                      "Create Role"
                     )}
                   </button>
                   <button
@@ -269,7 +283,7 @@ export default function Roles() {
                       setIsModalOpen(false);
                       setSelectedRole(null);
                     }}
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                    className="inline-flex justify-center w-full px-3 py-2 mt-3 text-sm font-semibold text-gray-900 bg-white rounded-md shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
                   >
                     Cancel
                   </button>
@@ -290,7 +304,7 @@ export default function Roles() {
         >
           <Formik
             initialValues={{
-              permissionIds: selectedRole?.permissions?.map(p => p.id) || [],
+              permissionIds: selectedRole?.permissions?.map((p) => p.id) || [],
             }}
             validationSchema={assignmentSchema}
             onSubmit={handleAssignPermissions}
@@ -300,26 +314,37 @@ export default function Roles() {
               <Form className="space-y-4">
                 <div className="max-h-[300px] overflow-y-auto pr-2 space-y-2">
                   {permissions.length === 0 ? (
-                    <div className="text-center py-4">
-                      <p className="text-sm text-gray-500">No permissions available.</p>
+                    <div className="py-4 text-center">
+                      <p className="text-sm text-gray-500">
+                        No permissions available.
+                      </p>
                     </div>
                   ) : (
                     permissions.map((permission) => (
-                      <label key={permission.id} className="flex items-center p-2 hover:bg-gray-50 rounded-md cursor-pointer">
+                      <label
+                        key={permission.id}
+                        className="flex items-center p-2 rounded-md cursor-pointer hover:bg-gray-50"
+                      >
                         <input
                           type="checkbox"
                           checked={values.permissionIds.includes(permission.id)}
                           onChange={(e) => {
                             const newIds = e.target.checked
                               ? [...values.permissionIds, permission.id]
-                              : values.permissionIds.filter(id => id !== permission.id);
-                            setFieldValue('permissionIds', newIds);
+                              : values.permissionIds.filter(
+                                  (id) => id !== permission.id
+                                );
+                            setFieldValue("permissionIds", newIds);
                           }}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                          className="text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                         />
                         <div className="ml-3">
-                          <p className="text-sm font-medium text-gray-700">{permission.name}</p>
-                          <p className="text-xs text-gray-500">{permission.description}</p>
+                          <p className="text-sm font-medium text-gray-700">
+                            {permission.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {permission.description}
+                          </p>
                         </div>
                       </label>
                     ))
@@ -327,22 +352,24 @@ export default function Roles() {
                 </div>
 
                 {errors.permissionIds && touched.permissionIds && (
-                  <p className="mt-1 text-xs text-red-600">{errors.permissionIds}</p>
+                  <p className="mt-1 text-xs text-red-600">
+                    {errors.permissionIds}
+                  </p>
                 )}
 
                 <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:col-start-2"
+                    className="inline-flex justify-center w-full px-3 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:col-start-2"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        <div className="w-4 h-4 mr-2 border-b-2 border-white rounded-full animate-spin"></div>
                         <span>Assigning...</span>
                       </div>
                     ) : (
-                      'Assign Permissions'
+                      "Assign Permissions"
                     )}
                   </button>
                   <button
@@ -351,7 +378,7 @@ export default function Roles() {
                       setIsAssignModalOpen(false);
                       setSelectedRole(null);
                     }}
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                    className="inline-flex justify-center w-full px-3 py-2 mt-3 text-sm font-semibold text-gray-900 bg-white rounded-md shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
                   >
                     Cancel
                   </button>

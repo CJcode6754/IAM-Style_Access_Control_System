@@ -162,169 +162,171 @@ export default function Permissions() {
   );
 
   return (
-    <div className="py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-gray-900">Permissions</h1>
-          <Button onClick={() => setIsModalOpen(true)}>Add Permission</Button>
-        </div>
-
-        {/* Toast */}
-        {alertMessage && (
-          <div className="fixed top-4 right-4 z-50 animate-fade-in">
-            <Alert
-              type={alertMessage.type}
-              message={alertMessage.message}
-              onClose={() => setAlertMessage(null)}
-            />
+    <div className="flex flex-col h-screen bg-gray-50">
+      <div className="box-border flex-grow min-h-0 overflow-auto">
+        <div className="px-4 py-6 mx-auto max-w-7xl sm:px-6 md:px-8">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-semibold text-gray-900">Permissions</h1>
+            <Button onClick={() => setIsModalOpen(true)}>Add Permission</Button>
           </div>
-        )}
 
-        <div className="mt-6">
-          {isLoading ? (
-            <div className="flex justify-center items-center min-h-[400px]">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-            </div>
-          ) : permissions && permissions.length > 0 ? (
-            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-              <Table
-                columns={columns}
-                data={permissions}
-                actions={renderActions}
+          {/* Toast */}
+          {alertMessage && (
+            <div className="fixed z-50 max-w-xs top-4 right-4 animate-fade-in">
+              <Alert
+                type={alertMessage.type}
+                message={alertMessage.message}
+                onClose={() => setAlertMessage(null)}
               />
             </div>
-          ) : (
-            <div className="text-center py-8 bg-white rounded-lg shadow">
-              <p className="text-gray-500">No permissions found. Create your first permission to get started.</p>
-            </div>
           )}
-        </div>
 
-        {/* Permission Form Modal */}
-        <Modal
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedPermission(null);
-          }}
-          title={selectedPermission ? 'Edit Permission' : 'Create Permission'}
-        >
-          <Formik
-            initialValues={{
-              moduleId: selectedPermission?.moduleId || '',
-              action: selectedPermission?.action || '',
-              description: selectedPermission?.description || '',
-            }}
-            validationSchema={permissionSchema}
-            onSubmit={handleSubmit}
-            enableReinitialize
-          >
-            {({ errors, touched, isSubmitting, values, setFieldValue }) => (
-              <Form className="space-y-4">
-                <div>
-                  <label htmlFor="moduleId" className="block text-sm font-medium text-gray-700">
-                    Module
-                  </label>
-                  <Field
-                    as="select"
-                    id="moduleId"
-                    name="moduleId"
-                    className="mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  >
-                    <option value="">Select a module</option>
-                    {modules && modules.map((module) => (
-                      <option key={module.id} value={module.id}>
-                        {module.name}
-                      </option>
-                    ))}
-                  </Field>
-                  {errors.moduleId && touched.moduleId && (
-                    <p className="mt-1 text-xs text-red-600">{errors.moduleId}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label htmlFor="action" className="block text-sm font-medium text-gray-700">
-                    Action
-                  </label>
-                  <Field
-                    as="select"
-                    id="action"
-                    name="action"
-                    className="mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                  >
-                    <option value="">Select an action</option>
-                    <option value="create">Create</option>
-                    <option value="read">Read</option>
-                    <option value="update">Update</option>
-                    <option value="delete">Delete</option>
-                  </Field>
-                  {errors.action && touched.action && (
-                    <p className="mt-1 text-xs text-red-600">{errors.action}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                    Description
-                  </label>
-                  <Field>
-                    {() => {
-                      const module = modules?.find(m => m.id === values.moduleId);
-                      const action = values.action;
-                      const defaultDescription = module && action && !values.description
-                        ? `Can ${action.toLowerCase()} ${module.name.toLowerCase()}`
-                        : values.description;
-
-                      return (
-                        <textarea
-                          id="description"
-                          name="description"
-                          rows={3}
-                          className="mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                          value={values.description || defaultDescription || ''}
-                          onChange={(e) => setFieldValue('description', e.target.value)}
-                          placeholder="Enter permission description"
-                        />
-                      );
-                    }}
-                  </Field>
-                  {errors.description && touched.description && (
-                    <p className="mt-1 text-xs text-red-600">{errors.description}</p>
-                  )}
-                </div>
-
-                <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:col-start-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? (
-                      <div className="flex items-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        <span>Saving...</span>
-                      </div>
-                    ) : (
-                      selectedPermission ? 'Save Changes' : 'Create Permission'
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsModalOpen(false);
-                      setSelectedPermission(null);
-                    }}
-                    disabled={isSubmitting}
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </Form>
+          <div className="mt-6">
+            {isLoading ? (
+              <div className="flex justify-center items-center min-h-[400px]">
+                <div className="w-8 h-8 border-b-2 border-indigo-600 rounded-full animate-spin"></div>
+              </div>
+            ) : permissions && permissions.length > 0 ? (
+              <div className="overflow-hidden bg-white shadow sm:rounded-lg">
+                <Table
+                  columns={columns}
+                  data={permissions}
+                  actions={renderActions}
+                />
+              </div>
+            ) : (
+              <div className="py-8 text-center bg-white rounded-lg shadow">
+                <p className="text-gray-500">No permissions found. Create your first permission to get started.</p>
+              </div>
             )}
-          </Formik>
-        </Modal>
+          </div>
+
+          {/* Permission Form Modal */}
+          <Modal
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false);
+              setSelectedPermission(null);
+            }}
+            title={selectedPermission ? 'Edit Permission' : 'Create Permission'}
+          >
+            <Formik
+              initialValues={{
+                moduleId: selectedPermission?.moduleId || '',
+                action: selectedPermission?.action || '',
+                description: selectedPermission?.description || '',
+              }}
+              validationSchema={permissionSchema}
+              onSubmit={handleSubmit}
+              enableReinitialize
+            >
+              {({ errors, touched, isSubmitting, values, setFieldValue }) => (
+                <Form className="space-y-4">
+                  <div>
+                    <label htmlFor="moduleId" className="block text-sm font-medium text-gray-700">
+                      Module
+                    </label>
+                    <Field
+                      as="select"
+                      id="moduleId"
+                      name="moduleId"
+                      className="mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    >
+                      <option value="">Select a module</option>
+                      {modules && modules.map((module) => (
+                        <option key={module.id} value={module.id}>
+                          {module.name}
+                        </option>
+                      ))}
+                    </Field>
+                    {errors.moduleId && touched.moduleId && (
+                      <p className="mt-1 text-xs text-red-600">{errors.moduleId}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="action" className="block text-sm font-medium text-gray-700">
+                      Action
+                    </label>
+                    <Field
+                      as="select"
+                      id="action"
+                      name="action"
+                      className="mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                    >
+                      <option value="">Select an action</option>
+                      <option value="create">Create</option>
+                      <option value="read">Read</option>
+                      <option value="update">Update</option>
+                      <option value="delete">Delete</option>
+                    </Field>
+                    {errors.action && touched.action && (
+                      <p className="mt-1 text-xs text-red-600">{errors.action}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                      Description
+                    </label>
+                    <Field>
+                      {() => {
+                        const module = modules?.find(m => m.id === values.moduleId);
+                        const action = values.action;
+                        const defaultDescription = module && action && !values.description
+                          ? `Can ${action.toLowerCase()} ${module.name.toLowerCase()}`
+                          : values.description;
+
+                        return (
+                          <textarea
+                            id="description"
+                            name="description"
+                            rows={3}
+                            className="mt-1 block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            value={values.description || defaultDescription || ''}
+                            onChange={(e) => setFieldValue('description', e.target.value)}
+                            placeholder="Enter permission description"
+                          />
+                        );
+                      }}
+                    </Field>
+                    {errors.description && touched.description && (
+                      <p className="mt-1 text-xs text-red-600">{errors.description}</p>
+                    )}
+                  </div>
+
+                  <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="inline-flex justify-center w-full px-3 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:col-start-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSubmitting ? (
+                        <div className="flex items-center">
+                          <div className="w-4 h-4 mr-2 border-b-2 border-white rounded-full animate-spin"></div>
+                          <span>Saving...</span>
+                        </div>
+                      ) : (
+                        selectedPermission ? 'Save Changes' : 'Create Permission'
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsModalOpen(false);
+                        setSelectedPermission(null);
+                      }}
+                      disabled={isSubmitting}
+                      className="inline-flex justify-center w-full px-3 py-2 mt-3 text-sm font-semibold text-gray-900 bg-white rounded-md shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </Form>
+              )}
+            </Formik>
+          </Modal>
+        </div>
       </div>
     </div>
   );

@@ -38,11 +38,16 @@ export const fetchUserPermissions = createAsyncThunk(
   }
 );
 
+// Fixed the parameter mapping here
 export const simulateAction = createAsyncThunk(
   'auth/simulateAction',
-  async ({ module, action }, { rejectWithValue }) => {
+  async ({ moduleName, action, userId }, { rejectWithValue }) => {
     try {
-      const response = await api.post('/auth/simulate-action', { module, action });
+      const response = await api.post('/auth/simulate-action', { 
+        moduleName, 
+        action, 
+        userId 
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -112,8 +117,9 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(simulateAction.fulfilled, (state) => {
+      .addCase(simulateAction.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.simulationResult = action.payload; // Store the simulation result
       })
       .addCase(simulateAction.rejected, (state, action) => {
         state.isLoading = false;

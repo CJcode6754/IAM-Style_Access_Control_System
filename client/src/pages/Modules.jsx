@@ -73,7 +73,7 @@ export default function Modules() {
     { key: 'name', label: 'Name' },
     { key: 'description', label: 'Description' },
     {
-      key: 'createdAt',
+      key: 'created_at',
       label: 'Created At',
       render: (value) => new Date(value).toLocaleDateString(),
     },
@@ -103,15 +103,15 @@ export default function Modules() {
 
   return (
     <div className="py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-        <div className="flex justify-between items-center">
+      <div className="px-4 mx-auto max-w-7xl sm:px-6 md:px-8">
+        <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold text-gray-900">Modules</h1>
           <Button onClick={() => setIsModalOpen(true)}>Add Module</Button>
         </div>
 
         {/* Toast */}
         {alertMessage && (
-          <div className="fixed top-4 right-4 z-50 animate-fade-in">
+          <div className="fixed z-50 top-4 right-4 animate-fade-in">
             <Alert
               type={alertMessage.type}
               message={alertMessage.message}
@@ -123,10 +123,10 @@ export default function Modules() {
         <div className="mt-6">
           {isLoading ? (
             <div className="flex justify-center items-center min-h-[400px]">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+              <div className="w-8 h-8 border-b-2 border-indigo-600 rounded-full animate-spin"></div>
             </div>
           ) : modules && modules.length > 0 ? (
-            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div className="overflow-hidden bg-white shadow sm:rounded-lg">
               <Table
                 columns={columns}
                 data={modules}
@@ -134,7 +134,7 @@ export default function Modules() {
               />
             </div>
           ) : (
-            <div className="text-center py-8 bg-white rounded-lg shadow">
+            <div className="py-8 text-center bg-white rounded-lg shadow">
               <p className="text-gray-500">No modules found. Create your first module to get started.</p>
             </div>
           )}
@@ -195,11 +195,11 @@ export default function Modules() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:col-start-2"
+                    className="inline-flex justify-center w-full px-3 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-md shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:col-start-2"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        <div className="w-4 h-4 mr-2 border-b-2 border-white rounded-full animate-spin"></div>
                         <span>Saving...</span>
                       </div>
                     ) : (
@@ -212,7 +212,7 @@ export default function Modules() {
                       setIsModalOpen(false);
                       setSelectedModule(null);
                     }}
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                    className="inline-flex justify-center w-full px-3 py-2 mt-3 text-sm font-semibold text-gray-900 bg-white rounded-md shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
                   >
                     Cancel
                   </button>

@@ -5,23 +5,24 @@ const db = database.getDB();
 export const indexRoles = (req, res, next) => {
   try {
     const query = `
-      SELECT r.id, r.name, r.description, r.created_at, r.updated_at,
-             COUNT(DISTINCT gr.group_id) as group_count,
-             COUNT(DISTINCT rp.permission_id) as permission_count
-      FROM roles r
-      LEFT JOIN group_roles gr ON r.id = gr.role_id
-      LEFT JOIN role_permissions rp ON r.id = rp.role_id
-      GROUP BY r.id, r.name, r.description, r.created_at, r.updated_at
-      ORDER BY r.name
-    `;
+  SELECT r.id, r.name, r.description, r.created_at, r.updated_at,
+         COUNT(DISTINCT gr.group_id) as group_count,
+         COUNT(DISTINCT rp.permission_id) as permission_count
+  FROM roles r
+  LEFT JOIN group_roles gr ON r.id = gr.role_id
+  LEFT JOIN role_permissions rp ON r.id = rp.role_id
+  GROUP BY r.id, r.name, r.description, r.created_at, r.updated_at
+  ORDER BY r.name
+`;
 
-    db.all(query, [], (err, roles) => {
-      if (err) {
-        return next(err);
-      }
+db.all(query, [], (err, roles) => {
+  if (err) {
+    return next(err);
+  }
 
-      res.json({ roles });
-    });
+  res.json({ roles });
+});
+
   } catch (error) {
     next(error);
   }
