@@ -1,35 +1,64 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectIsAuthenticated, fetchUserPermissions } from './redux/slices/authSlice';
+
+// Components
+import Layout from './components/Layout/Layout';
+import PrivateRoute from './components/PrivateRoute';
+
+// Pages
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Users from './pages/Users';
+import Groups from './pages/Groups';
+import Roles from './pages/Roles';
+import Modules from './pages/Modules';
+import Permissions from './pages/Permissions';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const dispatch = useDispatch();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchUserPermissions());
+    }
+  }, [dispatch, isAuthenticated]);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route 
+            path="/login" 
+            element={
+              isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+            } 
+          />
+          
+          <Route
+            path="/*"
+            element={
+              <PrivateRoute>
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/users/*" element={<Users />} />
+                    <Route path="/groups/*" element={<Groups />} />
+                    <Route path="/roles/*" element={<Roles />} />
+                    <Route path="/modules/*" element={<Modules />} />
+                    <Route path="/permissions/*" element={<Permissions />} />
+                  </Routes>
+                </Layout>
+              </PrivateRoute>
+            }
+          />
+        </Routes>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </Router>
+  );
 }
 
-export default App
+export default App;
