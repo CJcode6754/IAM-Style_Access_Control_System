@@ -81,7 +81,7 @@ The React frontend is structured with the following pages for managing the syste
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/CJcode6754/IAM-Style_Access_Control_System.git](https://github.com/CJcode6754/IAM-Style_Access_Control_System.git)
+    git clone https://github.com/CJcode6754/IAM-Style_Access_Control_System.git
     ```
 
 2.  **Navigate to the project directory:**
