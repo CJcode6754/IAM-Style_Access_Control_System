@@ -1,30 +1,58 @@
 import sqlite3 from "sqlite3";
+import bcrypt from "bcryptjs";
 
 class Database {
   constructor() {
-    const self = this;
-
-    self.db = new sqlite3.Database(":memory:", function (err) {
+    // Change ":memory:" to "./database.sqlite" for persistence
+    this.db = new sqlite3.Database(":memory:", (err) => {
       if (err) {
-        console.log(
-          "There was a problem connecting to the database:",
-          err.message
-        );
+        console.error("Database connection error:", err.message);
       } else {
         console.log("Database is ready");
       }
     });
   }
 
-  initialize() {
-    this.createTable(() => {
-      this.insertSeedData();
+  run(sql, params = []) {
+    return new Promise((resolve, reject) => {
+      this.db.run(sql, params, function (err) {
+        if (err) reject(err);
+        else resolve(this);
+      });
     });
   }
 
-  createTable() {
+  get(sql, params = []) {
+    return new Promise((resolve, reject) => {
+      this.db.get(sql, params, (err, result) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
+  }
+
+  all(sql, params = []) {
+    return new Promise((resolve, reject) => {
+      this.db.all(sql, params, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+  }
+
+  async initialize() {
+    try {
+      await this.createTables();
+      await this.insertSeedData();
+      console.log("Database initialized successfully");
+    } catch (error) {
+      console.error("Failed to initialize database:", error);
+      throw error;
+    }
+  }
+
+  async createTables() {
     const createStatements = [
-      // Users table
       `CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
@@ -33,8 +61,6 @@ class Database {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`,
-
-      // Groups table
       `CREATE TABLE IF NOT EXISTS groups (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
@@ -42,8 +68,6 @@ class Database {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`,
-
-      // Roles table
       `CREATE TABLE IF NOT EXISTS roles (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
@@ -51,8 +75,6 @@ class Database {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`,
-
-      // Modules table
       `CREATE TABLE IF NOT EXISTS modules (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
@@ -60,8 +82,6 @@ class Database {
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`,
-
-      // Permissions table
       `CREATE TABLE IF NOT EXISTS permissions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -71,8 +91,6 @@ class Database {
         FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE,
         UNIQUE (action, module_id)
       )`,
-
-      // User-Groups table
       `CREATE TABLE IF NOT EXISTS user_groups (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
@@ -82,8 +100,6 @@ class Database {
         FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE,
         UNIQUE (user_id, group_id)
       )`,
-
-      // Group-Roles table
       `CREATE TABLE IF NOT EXISTS group_roles (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         group_id INTEGER NOT NULL,
@@ -93,8 +109,6 @@ class Database {
         FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
         UNIQUE (group_id, role_id)
       )`,
-
-      // Role-Permissions table
       `CREATE TABLE IF NOT EXISTS role_permissions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         role_id INTEGER NOT NULL,
@@ -103,22 +117,27 @@ class Database {
         FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
         FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE,
         UNIQUE (role_id, permission_id)
-      )`,
+      )`
     ];
 
-    for (let i = 0; i < createStatements.length; i++) {
-      this.db.run(createStatements[i], function (err) {
-        if (err) {
-          console.log("Failed to create table:", err.message);
-        }
-      });
+    for (const statement of createStatements) {
+      await this.run(statement);
     }
   }
 
-  insertSeedData() {
-    const self = this;
+  async insertSeedData() {
+    // Create group & role
+    await this.run(
+      "INSERT OR IGNORE INTO groups (name, description) VALUES (?, ?)",
+      ["Administrators", "System administrators with full access"]
+    );
 
-    // Predefined modules to insert
+    await this.run(
+      "INSERT OR IGNORE INTO roles (name, description) VALUES (?, ?)",
+      ["Admin", "Full system access"]
+    );
+
+    // Insert modules
     const modulesData = [
       ["Users", "User management module"],
       ["Groups", "Group management module"],
@@ -127,41 +146,69 @@ class Database {
       ["Permissions", "Permission management module"],
     ];
 
-    const insertModule = self.db.prepare(
-      "INSERT OR IGNORE INTO modules (name, description) VALUES (?, ?)"
-    );
-
-    for (let i = 0; i < modulesData.length; i++) {
-      insertModule.run(modulesData[i]);
+    for (const [name, description] of modulesData) {
+      await this.run(
+        "INSERT OR IGNORE INTO modules (name, description) VALUES (?, ?)",
+        [name, description]
+      );
     }
 
-    insertModule.finalize();
+    // Add permissions
+    const modules = await this.all("SELECT * FROM modules");
+    const actions = ["create", "read", "update", "delete"];
 
-    // After inserting modules, add permissions
-    setTimeout(function () {
-      self.db.all("SELECT * FROM modules", function (err, rows) {
-        if (err) {
-          console.log("Could not get modules:", err.message);
-          return;
-        }
-
-        const actions = ["create", "read", "update", "delete"];
-        const insertPermission = self.db.prepare(
-          "INSERT OR IGNORE INTO permissions (name, action, module_id) VALUES (?, ?, ?)"
+    for (const module of modules) {
+      for (const action of actions) {
+        const permName = `${action}_${module.name.toLowerCase()}`;
+        await this.run(
+          "INSERT OR IGNORE INTO permissions (name, action, module_id) VALUES (?, ?, ?)",
+          [permName, action, module.id]
         );
+      }
+    }
 
-        for (let i = 0; i < rows.length; i++) {
-          const module = rows[i];
-          for (let j = 0; j < actions.length; j++) {
-            const action = actions[j];
-            const permName = action + "_" + module.name.toLowerCase();
-            insertPermission.run([permName, action, module.id]);
-          }
-        }
+    // Assign all permissions to Admin role
+    const adminRole = await this.get(
+      "SELECT id FROM roles WHERE name = 'Admin'"
+    );
+    if (adminRole) {
+      const permissions = await this.all("SELECT id FROM permissions");
+      for (const permission of permissions) {
+        await this.run(
+          "INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES (?, ?)",
+          [adminRole.id, permission.id]
+        );
+      }
+    }
 
-        insertPermission.finalize();
-      });
-    }, 200);
+    // Assign Admin role to Administrators group
+    const adminGroup = await this.get(
+      "SELECT id FROM groups WHERE name = 'Administrators'"
+    );
+    if (adminGroup && adminRole) {
+      await this.run(
+        "INSERT OR IGNORE INTO group_roles (group_id, role_id) VALUES (?, ?)",
+        [adminGroup.id, adminRole.id]
+      );
+    }
+
+    // Create default admin user
+    const hashedPassword = bcrypt.hashSync("admin123", 12);
+    const existingAdmin = await this.get(
+      "SELECT id FROM users WHERE username = ?",
+      ["admin"]
+    );
+    if (!existingAdmin) {
+      const result = await this.run(
+        "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+        ["admin", "admin@system.com", hashedPassword]
+      );
+      const adminUserId = result.lastID;
+      await this.run(
+        "INSERT OR IGNORE INTO user_groups (user_id, group_id) VALUES (?, ?)",
+        [adminUserId, adminGroup.id]
+      );
+    }
   }
 
   getDB() {
@@ -169,7 +216,7 @@ class Database {
   }
 
   close() {
-    this.db.close(function (err) {
+    this.db.close((err) => {
       if (err) {
         console.log("Something went wrong closing DB:", err.message);
       } else {
